@@ -1,28 +1,30 @@
 
 # coding: utf-8
 
+# In[1]:
+
+
 import glob as glob
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import matplotlib.pyplot as plt
-# DTW
-import sys
-import random
-import math as m
-import importlib
-from mpl_toolkits.mplot3d import Axes3D
 
-def Main_Execure(Dir):
-    
-    
-    Train_data = Input_motifs(Dir)
+
+# In[2]:
+
+
+def Main_Execure(Dir): #Dir 為motifs目錄
+    Dir_L = Dir+'/L'
+    Dir_R = Dir+'/R'
+    Train_data = Input_motifs(Dir_L,Dir_R)
+    print (Train_data.shape)
+    Train_data = np.array(Train_data)
     distances = np.zeros((np.shape(Train_data)[0],np.shape(Train_data)[0]))
-    print(Train_data.shape)
-    print(Train_data.shape[0])
-    print(Train_data.shape[1])
+    
 
     w = Train_data.shape[1]
+    
     for ind,i in enumerate(Train_data):
         for c_ind,j in enumerate(Train_data):
             cur_dist = 0.0
@@ -31,8 +33,10 @@ def Main_Execure(Dir):
                 cur_dist += DTWDistance(i[:,z],j[:,z],w)
             distances[ind,c_ind] = cur_dist
 
-    clusters, curr_medoids = cluster(distances, 5)
+    clusters, curr_medoids = cluster(distances, 3)
+    
 
+    
     #挑出分類群中最多的那群資料
     array_whichMany = []
     for i in range(len(np.unique(clusters))):
@@ -58,8 +62,26 @@ def Main_Execure(Dir):
 
     timeseries_sample = np.array(timeseries_sample)
     timeseries_sample = timeseries_sample.reshape(1,timeseries_sample.shape[0],timeseries_sample.shape[1])  ##最後的合成訊號
-    
+    df = pd.DataFrame(timeseries_sample[0])
+    df.to_csv(Dir+'motifs.csv',index=False,header=['L_imu_ax',
+                          'L_imu_ay',
+                           'L_imu_az',
+                           'L_imu_gx',
+                           'L_imu_gy',
+                           'L_imu_gz',
+                           'R_imu_ax',
+                           'R_imu_ay',
+                           'R_imu_az',
+                           'R_imu_gx',
+                           'R_imu_gy',
+                           'R_imu_gz',
+                         ])
+
+    print( 'sample finished')
     return timeseries_sample
+
+
+# In[3]:
 
 
 def preprocess(df):
@@ -79,25 +101,59 @@ def preprocess(df):
         return df
 
 
-def Input_motifs(Dir):
-    path = Dir+'/*/*.csv'
-    filenames = glob.glob(path)
+# In[4]:
 
-    samples_notScaling = []
 
-    for filenames_ in filenames:
-        samples_notScaling.append(pd.read_csv(filenames_))
+def Input_motifs(DirL,DirR):
+    path1 = DirL+'/*.csv'
+    path2 = DirR+'/*.csv'
+    
+    filenames1 = glob.glob(path1)
+    filenames2 = glob.glob(path2)
+
+    new_filename = []
+    for i in range(len(filenames1)):
+        df_left = pd.read_csv(filenames1[i])
+        df_right =  pd.read_csv(filenames2[i])
+        new_df = pd.concat([df_left,df_right],axis=1)
+        new_df = new_df.drop(new_df.columns[7],axis=1)
+        new_df.columns = ['L_imu_ax',
+                          'L_imu_ay',
+                           'L_imu_az',
+                           'L_imu_gx',
+                           'L_imu_gy',
+                           'L_imu_gz',
+                           'R_imu_ax',
+                           'R_imu_ay',
+                           'R_imu_az',
+                           'R_imu_gx',
+                           'R_imu_gy',
+                           'R_imu_gz',
+                         ]
+        new_filename.append(new_df)
+        
 
     samples_Scaling=[]  
 
-    for df in samples_notScaling:
+    for df in new_filename:
         sample_No = preprocess(df)
         samples_Scaling.append(sample_No)
         
     samples_Scaling = np.array(samples_Scaling)
-    
+    print( 'input finished')
     return samples_Scaling
 
+
+# In[5]:
+
+
+# DTW
+import sys
+import random
+import matplotlib.pyplot as plt
+import math as m
+import importlib
+from mpl_toolkits.mplot3d import Axes3D
 
 def cluster(distances, k):
 
@@ -121,8 +177,8 @@ def cluster(distances, k):
 
         old_medoids[:] = curr_medoids[:]
         curr_medoids[:] = new_medoids[:]
-        print('Mediods still not equal')
-
+        
+    print( 'cluster finished')
     return clusters, curr_medoids
 
 def assign_points_to_clusters(medoids, distances):
@@ -136,7 +192,7 @@ def compute_new_medoid(cluster, distances):
     mask[np.ix_(cluster,cluster)] = 0.
     cluster_distances = np.ma.masked_array(data=distances, mask=mask, fill_value=10e9)
     costs = cluster_distances.sum(axis=1)
-    return costs.argmin(axis=0, fill_value=10e9);
+    return costs.argmin(axis=0, fill_value=10e9)
 
 def DTWDistance(s1,s2,w):
     DTW={}
@@ -173,4 +229,8 @@ def LB_Keogh(s1,s2,r):
     return np.sqrt(LB_sum)
 
 
-# sample = Main_Execure('D:/Ming/motif/aaaaa/song1/order1/don')
+# Main_Execure('D:/Ming/Taiko-Master-develop/taiko/motif/aaaaa/song4/order4/don')
+
+# Main_Execure('D:/Ming/Taiko-Master-develop/taiko/motif/aaaaa/song4/order4/ka')
+
+# Main_Execure('D:/Ming/motif/aaaaa/song1/order4/don')

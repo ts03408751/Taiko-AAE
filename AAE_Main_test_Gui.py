@@ -1,11 +1,13 @@
 
 # coding: utf-8
 
-import DTW_song_dongKa_sampling as DTW
+# In[1]:
+
+
+
 import matplotlib.pyplot as plt
-import gc
+import pandas as pd
 import numpy as np
-# training
 import tensorflow as tf
 import keras
 from keras import backend as K
@@ -19,13 +21,126 @@ from lstm_vae import create_lstm_vae
 from keras.callbacks import History 
 from keras.callbacks import EarlyStopping
 from keras.layers import Input, LSTM, RepeatVector
-from keras.backend.tensorflow_backend import set_session
+import glob as glob
+import gc
+history = History()
 
-#查詢data organize table (母)後一個一個執行 DTW_song_dongKa_sampling並且串成train set
 
-Dir = 'motif'
-sample_order1 = DTW.Main_Execure(Dir)
-train_set = sample_order1
+# In[2]:
+
+
+def main(song_id): 
+    Samples_don, Samples_ka = inputData_train(song_id) # import 高手們該首歌的motifs
+    tmp_sample_don, tmp_sample_ka = inputData_predict()  #import tmp data
+    predict(Samples_don, tmp_sample_don)
+
+
+# In[3]:
+
+
+def inputData_train(song_id): #Dir為taiko_play_result.csv 路徑
+    if(song_id==1):
+        Dir_song1_don = 'data/don/song1'
+        song1_don = glob.glob(Dir_song1_don+'/*.csv')
+        Dir_song1_ka = 'data/ka/song1'
+        song1_ka = glob.glob(Dir_song1_ka+'/*.csv')
+        
+        Don_samples = []
+        Ka_samples = []
+        
+        for i in range(len(song1_don)):
+            df = pd.read_csv(song1_don[i])
+            array_don =  np.array(df)
+            array_don = array_don.reshape(1,array_don.shape[0],array_don.shape[1])
+            Don_samples.append(array_don)
+        for i in range(len(song1_ka)):
+            df = pd.read_csv(song1_ka[i])
+            array_ka = np.array(df)
+            array_ka = array_ka.reshape(1,array_ka.shape[0],array_ka.shape[1])
+            Ka_samples.append(array_ka)
+        
+    elif(song_id==2):
+        Dir_song2_don = 'data/don/song2'
+        song2_don = glob.glob(Dir_song2_don+'/*.csv')
+        Dir_song2_ka = 'data/ka/song2'
+        song2_ka = glob.glob(Dir_song2_ka+'/*.csv')
+        
+        Don_samples = []
+        Ka_samples = []
+        for i in range(len(song1_don)):
+            df = pd.read_csv(song1_don[i])
+            array_don =  np.array(df)
+            array_don = array_don.reshape(1,array_don.shape[0],array_don.shape[1])
+            Don_samples.append(array_don)
+        for i in range(len(song1_ka)):
+            df = pd.read_csv(song1_ka[i])
+            array_ka = np.array(df)
+            array_ka = array_ka.reshape(1,array_ka.shape[0],array_ka.shape[1])
+            Ka_samples.append(array_ka)
+            
+    elif(song_id==3):
+        Dir_song3_don = 'data/don/song3'
+        song3_don = glob.glob(Dir_song3_don+'/*.csv')
+        Dir_song3_ka = 'data/ka/song3'
+        song3_ka = glob.glob(Dir_song3_ka+'/*.csv')
+        
+        Don_samples = []
+        Ka_samples = []
+        for i in range(len(song1_don)):
+            df = pd.read_csv(song1_don[i])
+            array_don =  np.array(df)
+            array_don = array_don.reshape(1,array_don.shape[0],array_don.shape[1])
+            Don_samples.append(array_don)
+        for i in range(len(song1_ka)):
+            df = pd.read_csv(song1_ka[i])
+            array_ka = np.array(df)
+            array_ka = array_ka.reshape(1,array_ka.shape[0],array_ka.shape[1])
+            Ka_samples.append(array_ka)
+            
+    elif(song_id==4):
+        Dir_song4_don = 'data/don/song4'
+        song4_don = glob.glob(Dir_song4_don+'/*.csv')
+        Dir_song4_ka = 'data/ka/song4'
+        song4_ka = glob.glob(Dir_song4_ka+'/*.csv')
+        
+        Don_samples = []
+        Ka_samples = []
+        for i in range(len(song1_don)):
+            df = pd.read_csv(song1_don[i])
+            array_don =  np.array(df)
+            array_don = array_don.reshape(1,array_don.shape[0],array_don.shape[1])
+            Don_samples.append(array_don)
+        for i in range(len(song1_ka)):
+            df = pd.read_csv(song1_ka[i])
+            array_ka = np.array(df)
+            array_ka = array_ka.reshape(1,array_ka.shape[0],array_ka.shape[1])
+            Ka_samples.append(array_ka) 
+            
+    return Don_samples, Ka_samples #data type: list ,samples
+    
+
+
+# In[4]:
+
+
+def inputData_predict(): #Dir為 tep 的motifs 的dir, eg. motifs/subject/song1/order1/dong 
+    import DTW_song_dongKa_sampling as Ds
+    Dir_don = 'motif/don'
+    Dir_ka = 'motif/ka'
+    
+    
+    tmp_sample_don = Ds.Main_Execure(Dir_don)
+    tmp_sample_ka = Ds.Main_Execure(Dir_ka)
+
+    
+#     motifs_aray = np.array(df)
+#     motifs_aray = motifs_aray.reshape(1,motifs_aray.shape[0],motifs_aray.shape[1])
+    
+    return tmp_sample_don, tmp_sample_ka  #data type: array (1,20,12)
+
+
+# In[5]:
+
 
 #AAE
 
@@ -35,7 +150,8 @@ batch_size,
 intermediate_dim, 
 latent_dim,
 epsilon_std=1.,
-first_second=False                                
+first_second=False
+                                            
 ):
 
     """
@@ -98,7 +214,7 @@ first_second=False
 
     if(first_second ==True):
         encoder.load_weights('encoder.h5')
-
+        vae.load_weights('vae.h5')
     # generator, from latent space to reconstructed inputs
     decoder_input = Input(shape=(latent_dim,))
 
@@ -119,9 +235,64 @@ first_second=False
     return vae, encoder, generator
 
 
+# In[6]:
+
+
+# enc predict & clustering
+def predict(data_root, data_tmp):
+    input_dim = data_tmp.shape[-1]
+    timesteps = data_tmp.shape[1]
+    vae, enc, gen = create_lstm_vae_train(input_dim, 
+            timesteps, 
+            batch_size=1, 
+            intermediate_dim=64,
+            latent_dim=5,
+            epsilon_std=1.,
+            first_second =True
+            )
+    Latent_v = enc.predict(data_tmp)
+    Latent_root = []
+    for item in data_root:
+        latentcode = enc.predict(item)
+        Latent_root.append(latentcode)
+        
+    def cos_sim(vector_a, vector_b):
+#     """
+#     计算两个向量之间的余弦相似度
+#     :param vector_a: 向量 a 
+#     :param vector_b: 向量 b
+#     :return: sim
+#     """
+        vector_a = np.mat(vector_a)
+        vector_b = np.mat(vector_b)
+        num = float(vector_a * vector_b.T)
+        denom = np.linalg.norm(vector_a) * np.linalg.norm(vector_b)
+        cos = num / denom
+        sim = 0.5 + 0.5 * cos
+        return sim
+    
+    Distance = []
+    for vector in Latent_root:
+        simi = cos_sim(Latent_v,vector)
+        Distance.append(simi)
+        
+    minLocation = Distance.index(min(Distance))
+    Latent_master = Latent_root[minLocation]
+
+    #計算Latent_v 與其他四個高手的每一個dong ka predict vector的相似度 選最小者
+    Rader_compare(Latent_v,Latent_master)
+    
+    
+
+
+# In[7]:
+
+
+# training
 
 def conservative_train_AAE(data1,data2=[]):
     
+    from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
     config.gpu_options.allocator_type = 'BFC' #A "Best-fit with coalescing" algorithm, simplified from a version of dlmalloc.
     config.gpu_options.per_process_gpu_memory_fraction = 0.1
@@ -162,6 +333,7 @@ def conservative_train_AAE(data1,data2=[]):
             early_stopping = EarlyStopping(monitor='loss', patience=100, verbose=2)
             vae.fit(xY, xY, epochs=10000,callbacks=[early_stopping]) 
             enc.save_weights('encoder.h5')
+            vae.save_weights('vae.h5')
             preds = vae.predict(xY,batch_size=batch_size)
             
         else:
@@ -182,20 +354,36 @@ def conservative_train_AAE(data1,data2=[]):
             early_stopping = EarlyStopping(monitor='loss', patience=50, verbose=2)
             vae.fit(x, x, epochs=10000,callbacks=[early_stopping])
             enc.save_weights('encoder.h5')
+            vae.save_weights('vae.h5')
             preds = vae.predict(x,batch_size=batch_size)
     return vae, enc, gen
 
     gc.collect()
 
+
+# In[8]:
+
+
 #查詢data organize table (tmp)後一個一個執行 DTW_song_dongKa_sampling並且串成train set
 
+
+# In[9]:
+
+
 #train(母)串 train(子), then train
-vae, enc, gen  = conservative_train_AAE(data1 = train_set)
-print (' train data finish!')
-gc.collect()
+def training(train_set):
+    vae, enc, gen  = conservative_train_AAE(data1 = train_set)
+    print (' train data finish!')
+    gc.collect()
+    
+    return vae, enc, gen
+
+
+# In[10]:
+
 
 #雷達圖 
-def Rader(sample):
+def Rader_single(sample,enc):
     Latent_code = enc.predict(sample)
     samplesrar = np.interp(Latent_code, (Latent_code.min(), Latent_code.max()), (50, 100)) #Rescale to 0-100
 # 中文和負號的正常顯示
@@ -207,6 +395,8 @@ def Rader(sample):
 
     # 構造數據
     values = samplesrar[0]
+
+
 
     feature = ['feature01','feature02','feature03','feature04','feature05']
 
@@ -227,12 +417,14 @@ def Rader(sample):
     ax.fill(angles, values, alpha=0.25)
     # 繪製第二條折線圖
 
+
     # 添加每個特徵的標籤
     ax.set_thetagrids(angles * 180/np.pi, feature)
     # 設置雷達圖的範圍
     ax.set_ylim(0,100)
     # 添加標題
     plt.title('Radar_subject 02')
+
     # 添加網格線
     ax.grid(True)
     # 設置圖例
@@ -241,5 +433,66 @@ def Rader(sample):
     plt.savefig('Radar.png')
     plt.show()
 
-Rader(sample_order1)
+
+# In[11]:
+
+
+def Rader_compare(Latent_code1,Latent_code2):
+    samplesrar1 = np.interp(Latent_code1, (Latent_code1.min(), Latent_code1.max()), (50, 100)) #Rescale to 0-100
+    samplesrar2 = np.interp(Latent_code2, (Latent_code2.min(), Latent_code2.max()), (50, 100)) #Rescale to 0-100
+# 中文和負號的正常顯示
+    plt.rcParams['font.sans-serif'] = 'Microsoft YaHei'
+    plt.rcParams['axes.unicode_minus'] = False
+
+    # 使用ggplot的繪圖風格
+    plt.style.use('ggplot')
+
+    # 構造數據
+    values1 = samplesrar1[0]
+    values2 = samplesrar2[0]
+    
+
+    feature = ['feature01','feature02','feature03','feature04','feature05']
+
+    N = len(values1)
+    # 設置雷達圖的角度，用於平分切開一個圓面
+    angles=np.linspace(0, 2*np.pi, N, endpoint=False)
+    # 為了使雷達圖一圈封閉起來，需要下面的步驟
+    values1=np.concatenate((values1,[values1[0]]))
+    values2=np.concatenate((values2,[values2[0]]))   
+    angles=np.concatenate((angles,[angles[0]]))
+
+    # 繪圖
+    fig=plt.figure()
+    ax = fig.add_subplot(111, polar=True)
+    
+    # 繪製折線圖
+    ax.plot(angles, values1, 'o-', linewidth=0.2, label = 'tester')
+    # 填充顏色
+    ax.fill(angles, values1, alpha=0.25)
+    # 繪製第二條折線圖
+    
+    
+    # 繪製折線圖
+    ax.plot(angles, values2, 'o-', linewidth=0.2, label = 'master')
+    # 填充顏色
+    ax.fill(angles, values2, alpha=0.25)
+    # 繪製第二條折線圖
+    
+
+
+    # 添加每個特徵的標籤
+    ax.set_thetagrids(angles * 180/np.pi, feature)
+    # 設置雷達圖的範圍
+    ax.set_ylim(0,100)
+    # 添加標題
+    plt.title('Radar_subject 02')
+
+    # 添加網格線
+    ax.grid(True)
+    # 設置圖例
+    plt.legend(loc = 'best')
+    # 顯示圖形
+    plt.savefig('Radar.png')
+    plt.show()
 
